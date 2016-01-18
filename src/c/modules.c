@@ -16,6 +16,7 @@ void setup_modules(lua_State *L) {
   pushstuple(L, "filesystem", lua_filesystem);
   pushstuple(L, "sandbox", lua_sandbox);
   pushstuple(L, "textgpu", lua_textgpu);
+  pushstuple(L, "fbgpu", lua_fbgpu);
   pushstuple(L, "color", lua_util_color);
   pushstuple(L, "random", lua_util_random);
   pushstuple(L, "utf8data", lua_utf8_utf8data);
