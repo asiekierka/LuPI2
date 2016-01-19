@@ -54,7 +54,11 @@ function main()
 
   --Components
   loadModule("eeprom")
-  loadModule("textgpu")
+  if framebuffer.isReady() then
+    loadModule("fbgpu")
+  else
+    loadModule("textgpu")
+  end
   loadModule("filesystem")
 
   --Userspace
@@ -67,10 +71,14 @@ function main()
   _G.pushEvent = modules.computer.api.pushSignal
 
   modules.eeprom.register()
-  modules.filesystem.register("root")
+  modules.filesystem.register("/ocroot")
   modules.filesystem.register("/") --TODO: remove from release
   modules.computer.tmp = modules.filesystem.register("/tmp/" .. modules.random.uuid())
-  modules.textgpu.start()
+  if framebuffer.isReady() then
+    modules.fbgpu.start()
+  else
+    modules.textgpu.start()
+  end
 
   modules.boot.boot()
 end
