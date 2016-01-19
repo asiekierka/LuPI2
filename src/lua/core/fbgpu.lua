@@ -31,12 +31,9 @@ end
 local background = 0
 local foreground = 0
 
-local usub = modules.utf8.sub
-
 function fbgpu.start()
   local gpu = {}
   function gpu.bind() return false, "This is static bound gpu" end
-  function gpu.getScreen() return "n/a" end
   function gpu.setBackground(color, isPaletteIndex)
     checkArg(1, color, "number")
     checkArg(2, isPaletteIndex, "boolean", "nil")
@@ -90,7 +87,7 @@ function fbgpu.start()
     return fb.getWidth(), fb.getHeight()
   end
   function gpu.getViewport()
-    return termutils.getSize()
+    return fb.getWidth(), fb.getHeight()
   end
   function gpu.setViewport(w, h)
     checkArg(1, w, "number")
@@ -100,7 +97,8 @@ function fbgpu.start()
   function gpu.setResolution(w, h)
     checkArg(1, w, "number")
     checkArg(2, h, "number")
-    return false, "Non resizeable gpu"
+    return true
+    --return false, "Non resizeable gpu"
   end
   function gpu.get(x, y)
     checkArg(1, x, "number")
@@ -116,27 +114,41 @@ function fbgpu.start()
     y = math.floor(y)
     if not vertical then
       local i = 0
-      value:gsub(".", function(c)
-        fb.put(x+i-1, y-1, background, foreground, utf8.codepoint(c))
+      for p, cp in utf8.codes(value) do
+        fb.put(x+i-1, y-1, background, foreground, cp)
         i = i+1
-      end)
+      end
     else
       local i = 0
-      value:gsub(".", function(c)
-        fb.put(x-1, y+i-1, background, foreground, utf8.codepoint(c))
+      for p, cp in utf8.codes(value) do
+        fb.put(x-1, y+i-1, background, foreground, cp)
         i = i+1
-      end)
+      end
     end
     flush()
     return true
   end
-  function gpu.copy(x, y, w, h, tx, ty) --TODO: Check(check X multiple times)
+  function gpu.copy(x, y, w, h, tx, ty)
     checkArg(1, x, "number")
     checkArg(2, y, "number")
     checkArg(3, w, "number")
     checkArg(4, h, "number")
     checkArg(5, tx, "number")
     checkArg(6, ty, "number")
+    local sw = fb.getWidth()
+    local sh = fb.getHeight()
+    if x+w-1 >= sw then
+      w = sw+1-x
+    end
+    if x+tx+w-1 >= sw then
+      w = sw+1-x-tx
+    end
+    if y+h-1 >= sh then
+      h = sh+1-y
+    end
+    if y+ty+h-1 >= sh then
+      y = sh+1-y-ty
+    end
     fb.copy(x-1, y-1, w, h, tx, ty);
     return true
   end
@@ -151,6 +163,12 @@ function fbgpu.start()
     return true
   end
 
+  local screenAddr
+
+  function gpu.getScreen()
+    return screenAddr
+  end
+
   local w, h = gpu.getResolution()
   gpu.setForeground(0xFFFFFF)
   gpu.setBackground(0x000000)
@@ -158,7 +176,7 @@ function fbgpu.start()
   write("\x1b[?25l") --Disable cursor
 
   modules.component.api.register(nil, "gpu", gpu)
-  modules.component.api.register(nil, "screen", {getKeyboards = function() return {"TODO:SetThisUuid"} end}) --verry dummy screen, TODO: make it better, kbd uuid also in epoll.c
+  screenAddr = modules.component.api.register(nil, "screen", {getKeyboards = function() return {"TODO:SetThisUuid"} end}) --verry dummy screen, TODO: make it better, kbd uuid also in epoll.c
   modules.component.api.register("TODO:SetThisUuid", "keyboard", {})
 
   deadhooks[#deadhooks + 1] = function()
