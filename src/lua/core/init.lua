@@ -73,7 +73,7 @@ function main()
   modules.eeprom.register()
   modules.filesystem.register("/ocroot")
   modules.filesystem.register("/") --TODO: remove from release
-  modules.computer.tmp = modules.filesystem.register("/tmp/" .. modules.random.uuid())
+  modules.computer.tmp = modules.filesystem.register("/tmp/lupi-" .. modules.random.uuid())
   if framebuffer.isReady() then
     modules.fbgpu.start()
   else

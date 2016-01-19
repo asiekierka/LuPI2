@@ -25,7 +25,7 @@ char *fb_ptr = 0;
 char *colbuf = 0;
 ushort *chrbuf = 0;
 int fb_cw, fb_ch, fb_bpp, fb_bypp, fb_xo, fb_yo, fb_pitch;
-int fb_rot = 0;
+int fb_rot = 3;
 int palette[256];
 float pal_yuv[768];
 
